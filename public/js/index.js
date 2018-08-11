@@ -4,22 +4,13 @@ socket.on('connect', function () {
 })
 
 socket.on('newMessage', (message) => {
-  console.log('newMessage', message)
-  const li = document.createElement('li');
-  li.textContent = `${message.from}: ${message.text}`
-  messages.appendChild(li)
+  messages.appendChild(createMessageListItem(message));
+  scrollToBottom();
 })
 
 socket.on('newLocationMessage', function (message) {
-
-  const listElement = document.createElement('li');
-  const link = document.createElement('a')
-  listElement.textContent = `${message.from}: `;
-  link.setAttribute('href', message.url);
-  link.setAttribute('target', '_blank');
-  link.textContent = 'My current location';
-  listElement.appendChild(link);
-  messages.appendChild(listElement);
+  messages.appendChild(createMessageListItem(message));
+  scrollToBottom();
 })
 
 socket.on('newUserMessage', (message) => {
@@ -72,3 +63,64 @@ form.addEventListener('submit', (e) => {
   })
   formInput.value = 'Waiting for server to acknowledge...'
 })
+
+function createMessageListItem(message) {
+
+  const formattedTime = moment(message.createdAt).format('h:mm a');
+  const li = document.createElement('li');
+  li.classList.add('message');
+  const titleDiv = document.createElement('div');
+  titleDiv.classList.add('message__title');
+  const h4 = document.createElement('h4');
+  h4.textContent = message.from;
+  const span = document.createElement('span');
+  span.textContent = formattedTime;
+  titleDiv.appendChild(h4);
+  titleDiv.appendChild(span);
+
+  const bodyDiv = document.createElement('div');
+  bodyDiv.classList.add('message__body');
+
+  if (message.text) {
+    const p = document.createElement('p');
+    p.textContent = message.text;
+    bodyDiv.appendChild(p);
+  } else if (message.url) {
+
+    const link = document.createElement('a')
+    link.setAttribute('href', message.url);
+    link.setAttribute('target', '_blank');
+    link.textContent = 'My current location';
+    bodyDiv.appendChild(link);
+  }
+
+  li.appendChild(titleDiv);
+  li.appendChild(bodyDiv);
+  return li;
+}
+
+function scrollToBottom() {
+
+  //Selectors
+  const messages = document.getElementById('messages');
+  const newMessage = messages.lastElementChild;
+  const prevMessage = newMessage.previousElementSibling;
+
+  //Heights
+  const clientHeight = messages.clientHeight;
+  const scrollTop = messages.scrollTop;
+  const scrollHeight = messages.scrollHeight;
+  const newMessageHeight = newMessage.clientHeight;
+  let prevMessageHeight;
+  if (prevMessage) {
+     prevMessageHeight = prevMessage.clientHeight;
+  } else {
+    prevMessageHeight = 0;
+  }
+
+  if (clientHeight + scrollTop + newMessageHeight + prevMessageHeight >= scrollHeight) {
+    console.log('should scroll');
+    messages.scrollTop = scrollHeight;
+
+  }
+}
