@@ -1,6 +1,16 @@
 const socket = io();
 socket.on('connect', function () {
-  console.log('connected to server')
+
+  const params = getParams();
+
+  socket.emit('join', params, function (err) {
+    if (err) {
+      alert(err);
+      window.location.href = '/';
+    } else {
+      console.log('No error, yay')
+    }
+  })
 })
 
 socket.on('newMessage', (message) => {
@@ -13,15 +23,24 @@ socket.on('newLocationMessage', function (message) {
   scrollToBottom();
 })
 
-socket.on('newUserMessage', (message) => {
-  console.log(message)
-})
-
 socket.on('disconnect', function () {
   console.log('Disconnected from server');
 })
 
+socket.on('updateUserList', function (users) {
+   const usersDiv =   document.getElementById('users');
+  usersDiv.innerHTML='';
+  const ol = document.createElement('ol');
+  users.forEach((user) => {
+    const li = document.createElement('li');
+    li.textContent = user;
+    ol.appendChild(li);
+  })
+  
+  usersDiv.appendChild(ol);
 
+})
+/* DOM RELATED EVENTS */
 const form = document.getElementById('message-form');
 const messages = document.getElementById('messages');
 const locationButton = document.getElementById('send-location');
@@ -53,9 +72,7 @@ locationButton.addEventListener('click', (e) => {
 form.addEventListener('submit', (e) => {
   e.preventDefault();
   const formInput = document.getElementById('form-input');
-
-  socket.emit('createMessage', {
-    from: 'User',
+  socket.emit('createMessage', {    
     text: formInput.value
   }, () => {
     console.log('got it');
@@ -99,6 +116,14 @@ function createMessageListItem(message) {
   return li;
 }
 
+function getParams() {
+  const urlParams = new URLSearchParams(window.location.search);
+  return {
+    name: urlParams.get('name'),
+    room: urlParams.get('room')
+  }
+}
+
 function scrollToBottom() {
 
   //Selectors
@@ -113,7 +138,7 @@ function scrollToBottom() {
   const newMessageHeight = newMessage.clientHeight;
   let prevMessageHeight;
   if (prevMessage) {
-     prevMessageHeight = prevMessage.clientHeight;
+    prevMessageHeight = prevMessage.clientHeight;
   } else {
     prevMessageHeight = 0;
   }
