@@ -120,7 +120,7 @@ function getParams() {
   const urlParams = new URLSearchParams(window.location.search);
   return {
     name: urlParams.get('name'),
-    room: urlParams.get('room')
+    room: urlParams.get('room').toUpperCase()
   }
 }
 
